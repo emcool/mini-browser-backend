@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Mini Browser</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 15px Arial, sans-serif;
+    background: #111827;
+    color: white;
+  }
+  header { padding: 16px; background: #1f2937; }
+  h2 { margin: 0 0 12px; }
+  .bar { display: flex; gap: 8px; }
+  input {
+    flex: 1; min-width: 0; padding: 12px;
+    border: 1px solid #4b5563; border-radius: 8px;
+    background: #111827; color: white;
+  }
+  button {
+    padding: 10px 14px; border: 0; border-radius: 8px;
+    background: #3b82f6; color: white; cursor: pointer;
+  }
+  nav { display: flex; gap: 8px; margin-top: 10px; }
+  #status { color: #d1d5db; font-size: 13px; }
+  iframe {
+    display: block; width: 100%; height: calc(100vh - 160px);
+    border: 0; background: white;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h2>My Mini Browser</h2>
+  <div class="bar">
+    <input id="address" value="https://example.com"
+           placeholder="Enter a website URL">
+    <button id="go">Go</button>
+  </div>
+  <nav>
+    <button id="home">Home</button>
+    <button id="reload">Refresh</button>
+    <button id="test">Test Backend</button>
+  </nav>
+  <p id="status">Ready</p>
+</header>
+<iframe id="page" title="Website display"></iframe>
+
+<script>
+const backend = "https://mini-browser-backend-3p62.onrender.com";
+const address = document.getElementById("address");
+const page = document.getElementById("page");
+const status = document.getElementById("status");
+
+function navigate() {
+  let url = address.value.trim();
+  if (!url) return;
+  if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+
+  try {
+    const parsed = new URL(url);
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      throw new Error("Only web addresses are supported.");
+    }
+    address.value = parsed.href;
+    page.src = parsed.href;
+    status.textContent =
+      "Requested page. Some websites don't allow iframe embedding.";
+  } catch (error) {
+    status.textContent = error.message;
+  }
+}
+
+document.getElementById("go").onclick = navigate;
+address.addEventListener("keydown", e => {
+  if (e.key === "Enter") navigate();
+});
+document.getElementById("home").onclick = () => {
+  address.value = "https://example.com";
+  navigate();
+};
+document.getElementById("reload").onclick = () => {
+  try { page.contentWindow.location.reload(); }
+  catch { page.src = page.src; }
+};
+document.getElementById("test").onclick = async () => {
+  status.textContent = "Testing backend...";
+  try {
+    const response = await fetch(backend + "/api/test");
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    const data = await response.json();
+    status.textContent = data.message;
+  } catch (error) {
+    status.textContent =
+      "Connection failed. Check the backend and browser console.";
+  }
+};
+
+navigate();
+</script>
+</body>
+</html>
