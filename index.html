@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mini Browser</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mini Browser Test</title>
 
   <style>
     * {
@@ -14,21 +14,20 @@
       margin: 0;
       font-family: Arial, sans-serif;
       background: #111827;
-      color: #fff;
+      color: white;
     }
 
     header {
       padding: 16px;
       background: #1f2937;
-      border-bottom: 1px solid #374151;
     }
 
     h1 {
-      margin: 0 0 14px;
-      font-size: 23px;
+      margin: 0 0 12px;
+      font-size: 22px;
     }
 
-    .toolbar {
+    .address {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
@@ -37,37 +36,27 @@
     input {
       flex: 1;
       min-width: 180px;
-      padding: 12px;
+      padding: 11px;
       border: 1px solid #4b5563;
       border-radius: 8px;
       background: #111827;
       color: white;
-      font-size: 16px;
     }
 
     button {
-      padding: 12px 16px;
+      padding: 11px 15px;
       border: 0;
       border-radius: 8px;
       background: #2563eb;
       color: white;
-      font-size: 14px;
       cursor: pointer;
-    }
-
-    #testButton {
-      background: #059669;
     }
 
     #status {
       margin-top: 12px;
-      padding: 12px;
-      border-radius: 6px;
-      background: #111827;
-      color: #d1d5db;
       font-size: 14px;
+      color: #d1d5db;
       overflow-wrap: anywhere;
-      white-space: pre-wrap;
     }
 
     main {
@@ -75,7 +64,6 @@
     }
 
     iframe {
-      display: block;
       width: 100%;
       height: 70vh;
       min-height: 350px;
@@ -94,126 +82,58 @@
 
 <body>
   <header>
-    <h1>Mini Browser</h1>
+    <h1>Mini Browser Test</h1>
 
-    <div class="toolbar">
+    <div class="address">
       <input
-        id="urlInput"
+        id="address"
         type="text"
-        value="https://example.com"
-        placeholder="Enter a website address"
-        aria-label="Website address"
+        value="https://mini-browser-backend-3p62.onrender.com/demo"
+        readonly
+        aria-label="Demo page address"
       >
 
-      <button id="goButton" type="button">Go</button>
-      <button id="testButton" type="button">Test Backend</button>
+      <button id="reload" type="button">Reload Demo</button>
+      <button id="open" type="button">Open Demo Separately</button>
     </div>
 
     <div id="status" role="status" aria-live="polite">
-      Ready.
+      Ready to test the demo page.
     </div>
   </header>
 
   <main>
     <iframe
-      id="browserFrame"
-      title="Website display"
-      src="about:blank"
-      referrerpolicy="no-referrer"
+      id="page"
+      title="Controlled demo page"
+      src="https://mini-browser-backend-3p62.onrender.com/demo"
     ></iframe>
 
     <p class="note">
-      Some websites do not permit iframe display. This page does not
-      bypass website security rules or school network restrictions.
+      This page tests whether the browser permits the hosted demo
+      to appear inside a frame. If the frame is blocked, use the
+      separate-tab button to check whether the demo itself works.
     </p>
   </main>
 
   <script>
-    const BACKEND_URL =
-      "https://mini-browser-backend-3p62.onrender.com";
+    const demoURL =
+      "https://mini-browser-backend-3p62.onrender.com/demo";
 
-    const urlInput = document.getElementById("urlInput");
+    const frame = document.getElementById("page");
     const status = document.getElementById("status");
-    const browserFrame = document.getElementById("browserFrame");
 
-    document
-      .getElementById("goButton")
-      .addEventListener("click", openSite);
-
-    document
-      .getElementById("testButton")
-      .addEventListener("click", testBackend);
-
-    urlInput.addEventListener("keydown", function (event) {
-      if (event.key === "Enter") {
-        openSite();
-      }
+    document.getElementById("reload").addEventListener("click", () => {
+      frame.src = demoURL;
+      status.textContent =
+        "Reload requested. Check whether the demo appears below.";
     });
 
-    function openSite() {
-      let address = urlInput.value.trim();
-
-      if (!address) {
-        status.textContent = "Please enter a website address.";
-        return;
-      }
-
-      if (!/^https?:\/\//i.test(address)) {
-        address = "https://" + address;
-      }
-
-      try {
-        const parsed = new URL(address);
-
-        if (!["http:", "https:"].includes(parsed.protocol)) {
-          status.textContent =
-            "Only HTTP and HTTPS addresses are supported.";
-          return;
-        }
-
-        urlInput.value = parsed.href;
-        browserFrame.src = parsed.href;
-
-        status.textContent =
-          "Opening " + parsed.href +
-          "\nThe website may prevent iframe display.";
-      } catch (error) {
-        status.textContent = "Invalid website address.";
-      }
-    }
-
-    async function testBackend() {
-      status.textContent = "Testing backend connection...";
-
-      try {
-        const response = await fetch(
-          BACKEND_URL + "/api/test",
-          { method: "GET" }
-        );
-
-        const responseText = await response.text();
-
-        if (!response.ok) {
-          status.textContent =
-            "HTTP " + response.status +
-            "\nServer response: " + responseText;
-          return;
-        }
-
-        status.textContent =
-          "Backend connected successfully!\n" +
-          responseText;
-
-      } catch (error) {
-        status.textContent =
-          "Request failed.\n" +
-          "Error: " + String(error) +
-          "\n\nPossible causes include CORS, a network error, " +
-          "or a browser policy restriction.";
-
-        console.error("Backend test error:", error);
-      }
-    }
+    document.getElementById("open").addEventListener("click", () => {
+      window.open(demoURL, "_blank", "noopener");
+      status.textContent =
+        "Opened a separate-tab request. Check the new tab.";
+    });
   </script>
 </body>
 </html>
