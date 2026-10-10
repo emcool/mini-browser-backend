@@ -1,139 +1,293 @@
-<!DOCTYPE html>
+   <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mini Browser Test</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mini Browser</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<style>
+* { box-sizing: border-box; }
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #111827;
-      color: white;
-    }
+body {
+  margin: 0;
+  background: #111827;
+  color: #f9fafb;
+  font-family: Arial, sans-serif;
+}
 
-    header {
-      padding: 16px;
-      background: #1f2937;
-    }
+header {
+  padding: 16px;
+  background: #1f2937;
+  border-bottom: 1px solid #374151;
+}
 
-    h1 {
-      margin: 0 0 12px;
-      font-size: 22px;
-    }
+h1 {
+  margin: 0 0 14px;
+  font-size: 22px;
+}
 
-    .address {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 
-    input {
-      flex: 1;
-      min-width: 180px;
-      padding: 11px;
-      border: 1px solid #4b5563;
-      border-radius: 8px;
-      background: #111827;
-      color: white;
-    }
+input {
+  flex: 1;
+  min-width: 150px;
+  padding: 11px;
+  border: 1px solid #4b5563;
+  border-radius: 8px;
+  background: #111827;
+  color: white;
+  font-size: 15px;
+}
 
-    button {
-      padding: 11px 15px;
-      border: 0;
-      border-radius: 8px;
-      background: #2563eb;
-      color: white;
-      cursor: pointer;
-    }
+button {
+  padding: 11px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
 
-    #status {
-      margin-top: 12px;
-      font-size: 14px;
-      color: #d1d5db;
-      overflow-wrap: anywhere;
-    }
+button:active {
+  opacity: .75;
+}
 
-    main {
-      padding: 12px;
-    }
+#status {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #cbd5e1;
+}
 
-    iframe {
-      width: 100%;
-      height: 70vh;
-      min-height: 350px;
-      border: 1px solid #4b5563;
-      border-radius: 8px;
-      background: white;
-    }
+main {
+  padding: 18px;
+}
 
-    .note {
-      color: #9ca3af;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-  </style>
+.page {
+  max-width: 700px;
+  margin: 10px auto;
+  padding: 24px;
+  min-height: 350px;
+  border-radius: 12px;
+  background: white;
+  color: #1f2937;
+}
+
+.page h2 {
+  color: #2563eb;
+}
+
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.tile {
+  padding: 18px 12px;
+  background: #eff6ff;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  color: #1d4ed8;
+  border: 1px solid #dbeafe;
+}
+
+.tile:hover {
+  background: #dbeafe;
+}
+
+footer {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 12px;
+  padding: 16px;
+}
+</style>
 </head>
 
 <body>
-  <header>
-    <h1>Mini Browser Test</h1>
+<header>
+  <h1>Mini Browser</h1>
 
-    <div class="address">
-      <input
-        id="address"
-        type="text"
-        value="https://mini-browser-backend-3p62.onrender.com/demo"
-        readonly
-        aria-label="Demo page address"
-      >
+  <div class="toolbar">
+    <button id="backBtn" type="button">←</button>
+    <button id="forwardBtn" type="button">→</button>
 
-      <button id="reload" type="button">Reload Demo</button>
-      <button id="open" type="button">Open Demo Separately</button>
+    <input
+      id="address"
+      type="text"
+      value="home://start"
+      aria-label="Demo address"
+      placeholder="Enter a demo address"
+    >
+
+    <button id="goBtn" type="button">Go</button>
+    <button id="homeBtn" type="button">Home</button>
+  </div>
+
+  <div id="status" role="status" aria-live="polite">
+    Ready · Local demo mode
+  </div>
+</header>
+
+<main>
+  <div id="page" class="page"></div>
+</main>
+
+<footer>
+  Self-contained interface demo · No external requests
+</footer>
+
+<script>
+const address = document.getElementById("address");
+const page = document.getElementById("page");
+const status = document.getElementById("status");
+
+let historyList = [];
+let historyIndex = -1;
+
+const pages = {
+  "home://start": `
+    <h2>Welcome to Mini Browser</h2>
+    <p>This is a local demonstration of a browser-style interface.</p>
+    <p>Choose one of the built-in demo pages below.</p>
+    <div class="tile-grid">
+      <div class="tile" data-page="demo://about">
+        <strong>About</strong><p>About this project</p>
+      </div>
+      <div class="tile" data-page="demo://tools">
+        <strong>Tools</strong><p>Example tools page</p>
+      </div>
+      <div class="tile" data-page="demo://history">
+        <strong>History</strong><p>Visit history</p>
+      </div>
     </div>
+  `,
 
-    <div id="status" role="status" aria-live="polite">
-      Ready to test the demo page.
-    </div>
-  </header>
+  "demo://about": `
+    <h2>About this demo</h2>
+    <p>This page is built into your HTML file.</p>
+    <p>It does not need a server, an iframe, or an internet connection.</p>
+    <button data-page="home://start">Return Home</button>
+  `,
 
-  <main>
-    <iframe
-      id="page"
-      title="Controlled demo page"
-      src="https://mini-browser-backend-3p62.onrender.com/demo"
-    ></iframe>
+  "demo://tools": `
+    <h2>Demo Tools</h2>
+    <p>This calculator runs locally in the page.</p>
+    <label for="numA">First number</label>
+    <input id="numA" type="number" value="12">
+    <br><br>
+    <label for="numB">Second number</label>
+    <input id="numB" type="number" value="8">
+    <br><br>
+    <button id="calculateBtn" type="button">Add numbers</button>
+    <p id="calcResult">Result: —</p>
+    <button data-page="home://start">Return Home</button>
+  `,
 
-    <p class="note">
-      This page tests whether the browser permits the hosted demo
-      to appear inside a frame. If the frame is blocked, use the
-      separate-tab button to check whether the demo itself works.
-    </p>
-  </main>
+  "demo://history": `
+    <h2>Visit History</h2>
+    <div id="historyContent"></div>
+    <button data-page="home://start">Return Home</button>
+  `
+};
 
-  <script>
-    const demoURL =
-      "https://mini-browser-backend-3p62.onrender.com/demo";
+function navigate(target, saveHistory = true) {
+  target = target.trim();
 
-    const frame = document.getElementById("page");
-    const status = document.getElementById("status");
+  if (!pages[target]) {
+    status.textContent =
+      "Demo mode only: use home://start or the built-in demo pages.";
+    return;
+  }
 
-    document.getElementById("reload").addEventListener("click", () => {
-      frame.src = demoURL;
-      status.textContent =
-        "Reload requested. Check whether the demo appears below.";
-    });
+  if (saveHistory) {
+    historyList = historyList.slice(0, historyIndex + 1);
+    historyList.push(target);
+    historyIndex = historyList.length - 1;
+  }
 
-    document.getElementById("open").addEventListener("click", () => {
-      window.open(demoURL, "_blank", "noopener");
-      status.textContent =
-        "Opened a separate-tab request. Check the new tab.";
-    });
-  </script>
+  address.value = target;
+  page.innerHTML = pages[target];
+  status.textContent = "Viewing " + target;
+
+  if (target === "demo://history") {
+    const content = document.getElementById("historyContent");
+    content.innerHTML = historyList
+      .map(item => "<p>" + escapeHTML(item) + "</p>")
+      .join("");
+  }
+
+  updateNavigation();
+}
+
+function escapeHTML(value) {
+  return value.replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+function updateNavigation() {
+  document.getElementById("backBtn").disabled = historyIndex <= 0;
+  document.getElementById("forwardBtn").disabled =
+    historyIndex >= historyList.length - 1;
+}
+
+document.getElementById("goBtn").addEventListener("click", () => {
+  navigate(address.value);
+});
+
+address.addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    navigate(address.value);
+  }
+});
+
+document.getElementById("homeBtn").addEventListener("click", () => {
+  navigate("home://start");
+});
+
+document.getElementById("backBtn").addEventListener("click", () => {
+  if (historyIndex > 0) {
+    historyIndex--;
+    navigate(historyList[historyIndex], false);
+  }
+});
+
+document.getElementById("forwardBtn").addEventListener("click", () => {
+  if (historyIndex < historyList.length - 1) {
+    historyIndex++;
+    navigate(historyList[historyIndex], false);
+  }
+});
+
+page.addEventListener("click", event => {
+  const pageTarget = event.target.closest("[data-page]");
+
+  if (pageTarget) {
+    navigate(pageTarget.dataset.page);
+    return;
+  }
+
+  if (event.target.id === "calculateBtn") {
+    const a = Number(document.getElementById("numA").value);
+    const b = Number(document.getElementById("numB").value);
+
+    document.getElementById("calcResult").textContent =
+      "Result: " + (a + b);
+  }
+});
+
+navigate("home://start");
+</script>
 </body>
 </html>
