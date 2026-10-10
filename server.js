@@ -4,30 +4,23 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors({
-  origin: "*",
-  methods: ["GET"]
-}));
+// Allow cross-origin requests for the test API.
+app.use(cors());
 
+// Basic health check.
 app.get("/", (req, res) => {
-  res.type("html").send(`
-    <!doctype html>
-    <html>
-      <body style="font:16px sans-serif;padding:24px">
-        <h1>Mini-browser backend is running!</h1>
-        <p>Backend is online.</p>
-      </body>
-    </html>
-  `);
+  res.status(200).send("Mini-browser backend is running!");
 });
 
+// API connection test.
 app.get("/api/test", (req, res) => {
-  res.json({
+  res.status(200).json({
     status: "ok",
     message: "Your HTML frontend connected successfully!"
   });
 });
 
+// Start the server.
 app.listen(PORT, "0.0.0.0", () => {
-  console.log("Server listening on port " + PORT);
+  console.log(`Server listening on port ${PORT}`);
 });
