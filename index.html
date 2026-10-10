@@ -14,7 +14,7 @@
       margin: 0;
       font-family: Arial, sans-serif;
       background: #111827;
-      color: white;
+      color: #fff;
     }
 
     header {
@@ -24,8 +24,8 @@
     }
 
     h1 {
-      margin: 0 0 12px;
-      font-size: 22px;
+      margin: 0 0 14px;
+      font-size: 23px;
     }
 
     .toolbar {
@@ -47,7 +47,7 @@
 
     button {
       padding: 12px 16px;
-      border: none;
+      border: 0;
       border-radius: 8px;
       background: #2563eb;
       color: white;
@@ -55,33 +55,26 @@
       cursor: pointer;
     }
 
-    button:hover {
-      background: #1d4ed8;
-    }
-
     #testButton {
       background: #059669;
     }
 
-    #testButton:hover {
-      background: #047857;
-    }
-
     #status {
       margin-top: 12px;
-      padding: 10px;
+      padding: 12px;
       border-radius: 6px;
       background: #111827;
       color: #d1d5db;
-      overflow-wrap: anywhere;
       font-size: 14px;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
     }
 
     main {
       padding: 12px;
     }
 
-    #browserFrame {
+    iframe {
       display: block;
       width: 100%;
       height: 70vh;
@@ -107,8 +100,9 @@
       <input
         id="urlInput"
         type="text"
-        placeholder="Enter a website, e.g. https://example.com"
         value="https://example.com"
+        placeholder="Enter a website address"
+        aria-label="Website address"
       >
 
       <button id="goButton" type="button">Go</button>
@@ -129,9 +123,8 @@
     ></iframe>
 
     <p class="note">
-      Some websites do not allow iframe display. If a site refuses to load,
-      try opening it in a regular browser tab. The backend test checks
-      connectivity only; it does not bypass website or school restrictions.
+      Some websites do not permit iframe display. This page does not
+      bypass website security rules or school network restrictions.
     </p>
   </main>
 
@@ -143,12 +136,13 @@
     const status = document.getElementById("status");
     const browserFrame = document.getElementById("browserFrame");
 
-    document.getElementById("goButton").addEventListener("click", openSite);
+    document
+      .getElementById("goButton")
+      .addEventListener("click", openSite);
 
-    document.getElementById("testButton").addEventListener(
-      "click",
-      testBackend
-    );
+    document
+      .getElementById("testButton")
+      .addEventListener("click", testBackend);
 
     urlInput.addEventListener("keydown", function (event) {
       if (event.key === "Enter") {
@@ -160,7 +154,7 @@
       let address = urlInput.value.trim();
 
       if (!address) {
-        status.textContent = "Enter a website address first.";
+        status.textContent = "Please enter a website address.";
         return;
       }
 
@@ -171,18 +165,20 @@
       try {
         const parsed = new URL(address);
 
-        if (parsed.protocol !== "https:" &&
-            parsed.protocol !== "http:") {
-          status.textContent = "Only HTTP and HTTPS addresses are supported.";
+        if (!["http:", "https:"].includes(parsed.protocol)) {
+          status.textContent =
+            "Only HTTP and HTTPS addresses are supported.";
           return;
         }
 
         urlInput.value = parsed.href;
         browserFrame.src = parsed.href;
+
         status.textContent =
-          "Requested website. It may refuse to load inside this frame.";
+          "Opening " + parsed.href +
+          "\nThe website may prevent iframe display.";
       } catch (error) {
-        status.textContent = "That doesn't look like a valid website address.";
+        status.textContent = "Invalid website address.";
       }
     }
 
@@ -195,20 +191,27 @@
           { method: "GET" }
         );
 
+        const responseText = await response.text();
+
         if (!response.ok) {
           status.textContent =
-            "Server returned HTTP " + response.status + ".";
+            "HTTP " + response.status +
+            "\nServer response: " + responseText;
           return;
         }
 
-        const data = await response.json();
-
         status.textContent =
-          "Connected! " + (data.message || "Backend responded successfully.");
+          "Backend connected successfully!\n" +
+          responseText;
+
       } catch (error) {
         status.textContent =
-          "Connection failed: " + error.message +
-          ". Check the backend URL, CORS settings, and deployment status.";
+          "Request failed.\n" +
+          "Error: " + String(error) +
+          "\n\nPossible causes include CORS, a network error, " +
+          "or a browser policy restriction.";
+
+        console.error("Backend test error:", error);
       }
     }
   </script>
